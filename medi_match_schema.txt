@@ -1,0 +1,728 @@
+all required core tables:
+
+Auth / users → user_profiles
+
+Catalog → product_categories, products, product_images
+
+Commerce → carts, cart_items, orders, order_items
+
+Ops → inventory, payments, quotations
+
+UX → reviews, customizations, complaints
+
+AI → ai_activity_logs
+
+and every tables with RLS rules.
+
+
+
+
+IMP KEEP IN MIND WHILE BUIDING NON-NEGOTIABLE RULES:~
+- RLS stays ON always
+- Frontend uses anon key only
+- Backend uses service_role only
+- AI NEVER touches DB directly
+- AI NEVER runs arbitrary SQL
+- Admin ≠ service_role
+
+
+
+
+TEST 1 — Normal user isolation
+
+Login as User A (Google account 1):
+
+Can see:
+
+own user_profiles
+
+own carts, cart_items
+
+own orders, order_items
+
+own payments, complaints, quotations
+
+Cannot see:
+
+other users’ carts/orders
+
+inventory write
+
+product create/update
+
+
+
+
+
+
+Admin must:
+
+Read all users
+
+Manage products, inventory, categories
+
+Read all orders & payments
+
+Read AI logs
+
+Admin must NOT:
+
+Bypass auth
+
+Use service_role from frontend
+
+
+
+
+
+
+
+TEST 3 — Anonymous access (important)
+
+Without login:
+
+Can read:
+
+products
+
+product_images
+
+product_categories
+
+reviews
+
+Cannot:
+
+read carts
+
+read orders
+
+insert anything
+
+
+
+
+
+AGENTIC AI READINESS STATUS
+Database side: READY
+
+You already have:
+
+ai_activity_logs
+
+clean schema
+
+service_role compatibility
+
+What’s missing (expected):
+
+RPC functions
+
+Flask middleware
+
+AI action whitelist
+
+That’s backend logic, not DB schema.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+create table public.user_profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  phone text unique,
+  role text check (role in ('ADMIN','USER','BOT')) default 'USER',
+  address text,
+  created_at timestamptz default now()
+);
+
+
+alter table public.user_profiles enable row level security;
+
+
+create policy "User inserts own profile"
+on public.user_profiles
+for insert
+with check (auth.uid() = id);
+
+create policy "User reads own profile"
+on public.user_profiles
+for select
+using (auth.uid() = id);
+
+create policy "User updates own profile"
+on public.user_profiles
+for update
+using (auth.uid() = id);
+
+create policy "Admin reads all profiles"
+on public.user_profiles
+for select
+using (
+  exists (
+    select 1 from public.user_profiles up
+    where up.id = auth.uid()
+    and up.role = 'ADMIN'
+  )
+);
+
+
+
+
+
+
+
+create table public.products (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  description text,
+  price numeric(10,2) not null,
+  created_at timestamptz default now()
+);
+
+alter table public.products enable row level security;
+
+
+
+create policy "Public read products"
+on public.products
+for select
+using (true);
+
+
+create policy "Admin manage products"
+on public.products
+for all
+using (
+  exists (
+    select 1 from public.user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+create table public.carts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.user_profiles(id),
+  created_at timestamptz default now()
+);
+
+alter table public.carts enable row level security;
+
+
+
+create policy "User manages own cart"
+on public.carts
+for all
+using (auth.uid() = user_id);
+
+
+create table public.cart_items (
+  id uuid primary key default gen_random_uuid(),
+  cart_id uuid references public.carts(id) on delete cascade,
+  product_id uuid references public.products(id),
+  quantity int not null
+);
+
+alter table public.cart_items enable row level security;
+
+
+create policy "User manages own cart items"
+on public.cart_items
+for all
+using (
+  exists (
+    select 1 from public.carts
+    where carts.id = cart_items.cart_id
+    and carts.user_id = auth.uid()
+  )
+);
+
+
+
+
+create table public.orders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.user_profiles(id),
+  total_amount numeric(10,2),
+  status text,
+  created_at timestamptz default now()
+);
+
+alter table public.orders enable row level security;
+
+
+create policy "User reads own orders"
+on public.orders
+for select
+using (auth.uid() = user_id);
+
+create policy "User creates own orders"
+on public.orders
+for insert
+with check (auth.uid() = user_id);
+
+
+
+create policy "Admin manages all orders"
+on public.orders
+for all
+using (
+  exists (
+    select 1 from public.user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+create table product_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text unique not null,
+  description text,
+  created_at timestamptz default now()
+);
+
+alter table product_categories enable row level security;
+
+
+
+-- Public read
+create policy "Public read categories"
+on product_categories
+for select
+using (true);
+
+-- Admin only write
+create policy "Admin manage categories"
+on product_categories
+for all
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+create table product_images (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid references products(id) on delete cascade,
+  image_url text not null
+);
+
+alter table product_images enable row level security;
+
+
+create policy "Public read product images"
+on product_images
+for select
+using (true);
+
+create policy "Admin manage product images"
+on product_images
+for all
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+
+create table inventory (
+  product_id uuid primary key references products(id),
+  quantity int not null,
+  updated_at timestamptz default now()
+);
+
+alter table inventory enable row level security;
+
+
+-- Anyone can read stock
+create policy "Public read inventory"
+on inventory
+for select
+using (true);
+
+-- Admin only update
+create policy "Admin update inventory"
+on inventory
+for all
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+
+create table order_items (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id) on delete cascade,
+  product_id uuid references products(id),
+  quantity int not null,
+  price numeric(10,2) not null
+);
+
+alter table order_items enable row level security;
+
+
+-- User reads own order items
+create policy "User reads own order items"
+on order_items
+for select
+using (
+  exists (
+    select 1 from orders
+    where orders.id = order_items.order_id
+    and orders.user_id = auth.uid()
+  )
+);
+
+-- Admin access
+create policy "Admin manage order items"
+on order_items
+for all
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+
+create table customizations (
+  id uuid primary key default gen_random_uuid(),
+  order_item_id uuid references order_items(id),
+  type text,
+  details text,
+  additional_cost numeric(10,2) default 0,
+  status text,
+  created_at timestamptz default now()
+);
+
+alter table customizations enable row level security;
+
+
+
+
+-- User reads own customizations
+create policy "User reads own customizations"
+on customizations
+for select
+using (
+  exists (
+    select 1 from order_items oi
+    join orders o on o.id = oi.order_id
+    where oi.id = customizations.order_item_id
+    and o.user_id = auth.uid()
+  )
+);
+
+-- Admin manage
+create policy "Admin manage customizations"
+on customizations
+for all
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+
+create table payments (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id),
+  payment_method text,
+  amount numeric(10,2),
+  status text,
+  created_at timestamptz default now()
+);
+
+alter table payments enable row level security;
+
+
+-- User reads own payments
+create policy "User reads own payments"
+on payments
+for select
+using (
+  exists (
+    select 1 from orders
+    where orders.id = payments.order_id
+    and orders.user_id = auth.uid()
+  )
+);
+
+-- Admin manage
+create policy "Admin manage payments"
+on payments
+for all
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+create table reviews (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references user_profiles(id),
+  product_id uuid references products(id),
+  rating int check (rating between 1 and 5),
+  comment text,
+  created_at timestamptz default now()
+);
+
+alter table reviews enable row level security;
+
+
+-- Public read
+create policy "Public read reviews"
+on reviews
+for select
+using (true);
+
+-- User creates own review
+create policy "User creates review"
+on reviews
+for insert
+with check (auth.uid() = user_id);
+
+-- User updates own review
+create policy "User updates review"
+on reviews
+for update
+using (auth.uid() = user_id);
+
+
+
+
+create table quotations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references user_profiles(id),
+  product_id uuid references products(id),
+  price numeric(10,2),
+  valid_till date,
+  status text,
+  created_at timestamptz default now()
+);
+
+alter table quotations enable row level security;
+
+
+-- User reads own
+create policy "User reads own quotations"
+on quotations
+for select
+using (auth.uid() = user_id);
+
+-- Admin manage
+create policy "Admin manage quotations"
+on quotations
+for all
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+create table complaints (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references user_profiles(id),
+  order_id uuid references orders(id),
+  message text,
+  status text,
+  created_at timestamptz default now()
+);
+
+alter table complaints enable row level security;
+
+
+-- User manages own complaints
+create policy "User manages own complaints"
+on complaints
+for all
+using (auth.uid() = user_id);
+
+-- Admin read/respond
+create policy "Admin manage complaints"
+on complaints
+for select
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+
+create table ai_activity_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  action text,
+  input jsonb,
+  output jsonb,
+  created_at timestamptz default now()
+);
+
+alter table ai_activity_logs enable row level security;
+
+
+-- No public access
+create policy "Admin read ai logs"
+on ai_activity_logs
+for select
+using (
+  exists (
+    select 1 from user_profiles
+    where id = auth.uid() and role = 'ADMIN'
+  )
+);
+
+
+
+
+
+
+
+
+
+
+--- for references how FLASK JWT VERIFICATION (MANDATORY) do same as this:~
+
+
+from jose import jwt
+import requests
+
+SUPABASE_JWKS_URL = "https://pynntpblutpyvnkfjzcn.supabase.co/auth/v1/keys"
+
+jwks = requests.get(SUPABASE_JWKS_URL).json()
+
+def verify_supabase_jwt(token):
+    header = jwt.get_unverified_header(token)
+    key = next(k for k in jwks["keys"] if k["kid"] == header["kid"])
+    return jwt.decode(
+        token,
+        key,
+        algorithms=["RS256"],
+        audience="authenticated"
+    )
+
+
+
+Flask flow:
+
+1)Read Authorization: Bearer <token>
+2)Verify token
+3)Extract sub → user_id
+4)Query user_profiles
+5)Enforce role
+
+
+
+
+agentic ai safe design:~
+
+
+
+Frontend (user)
+   ↓ Supabase Auth JWT
+Flask Backend
+   ↓ verifies JWT
+   ↓ checks user role
+AI Agent (inside Flask)
+   ↓ generates SQL (controlled)
+Supabase (service_role key)
+
+WHY THIS WORKS
+🔹 service_role key
+
+
+AI IS allowed to:
+
+✅ Call predefined RPC functions
+✅ Read limited data
+✅ Trigger workflows
+
+RPC FUNCTION LOOK LIKE THIS:-
+create function get_user_orders(uid uuid)
+returns setof orders
+language sql
+security definer
+as $$
+  select * from orders where user_id = uid;
+$$;
+
+
+
+Bypasses RLS
+
+Full DB access
+
+NEVER exposed to frontend
+
+Used ONLY in backend
+
+🔹 Flask becomes the gatekeeper
+
+Verifies Supabase JWT
+
+Decides what AI can do
+
+Sanitizes inputs
+
+Whitelists allowed queries
+
+
+
+
+RECOMMENDED AI QUERY FLOW (SAFE)
+1) User asks: “Show my last 5 orders”
+2) AI maps intent → predefined function
+3) Flask calls RPC
+4) Supabase returns data
+5) User sees result
+This is Agentic AI done correctly.
