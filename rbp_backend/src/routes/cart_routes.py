@@ -378,6 +378,7 @@ def create_order_from_quote(quote_id):
 
         order_items_payload.append({
             "order_id": order_id,
+            "variant_id": item.get("variant_id"),
             "product_name": item["product_name"],
             "variant_name": item["variant_name"],
             "price": item["price"],
@@ -451,6 +452,7 @@ def checkout_direct():
         total += line_total
 
         snapshot_items.append({
+            "variant_id": v["id"],
             "product_name": v["products"]["name"],
             "variant_name": v["variant_name"],
             "price": float(v["price"]),
@@ -480,12 +482,26 @@ def checkout_direct():
     
     order_id = order["id"]
     
-    # insert order_items
+    # insert order_items AND decrement stock
     order_items_payload = []
     
     for item in snapshot_items:
+        variant_id = item.get("variant_id")
+        qty = int(item.get("quantity", 0))
+        
+        # Decrement stock for each variant
+        if variant_id and qty > 0:
+            try:
+                var_check = supabase.table("product_variants").select("stock").eq("id", variant_id).single().execute()
+                current_stock = var_check.data.get("stock", 0) if var_check.data else 0
+                new_stock = max(current_stock - qty, 0)
+                supabase.table("product_variants").update({"stock": new_stock}).eq("id", variant_id).execute()
+            except Exception as e:
+                print(f"STOCK DECREMENT ERROR for variant {variant_id}: {e}")
+        
         order_items_payload.append({
             "order_id": order_id,
+            "variant_id": variant_id,
             "product_name": item["product_name"],
             "variant_name": item["variant_name"],
             "price": item["price"],

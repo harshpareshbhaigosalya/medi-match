@@ -78,18 +78,16 @@ def stock_report():
         sold_map = {}
         for item in order_items:
             vid = item.get("variant_id")
+            # If variant_id is missing in order_items, we can't map it.
             if not vid: continue
             
-            # Ensure safe string key
             vid = str(vid)
             qty = item.get("quantity") or 0
-            
-            # Simple integer conversion safety
             try:
                 qty = int(qty)
             except:
                 qty = 0
-                
+            
             sold_map[vid] = sold_map.get(vid, 0) + qty
 
         # 5. Assemble Hierarchy
