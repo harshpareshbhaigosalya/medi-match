@@ -27,9 +27,14 @@ export default function Login() {
       const token = data.session.access_token;
       localStorage.setItem("token", token);
 
-      let apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      let apiUrl = import.meta.env.VITE_API_URL || "";
       if (apiUrl.includes("onrender.com") && !apiUrl.includes("/api")) {
         apiUrl = `${apiUrl.replace(/\/$/, "")}/api`;
+      }
+      if (!apiUrl) {
+        apiUrl = window.location.origin.includes("localhost")
+          ? "http://localhost:5000/api"
+          : `${window.location.origin}/api`;
       }
 
       // fetch profile to ensure it exists and check role

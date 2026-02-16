@@ -527,7 +527,11 @@ def checkout_direct():
             if not frontend_url:
                 # Fallback to current request origin or localhost
                 origin = request.headers.get("Origin")
-                frontend_url = origin if origin else "http://localhost:5173"
+                if origin:
+                    frontend_url = origin
+                else:
+                    # Fallback to current host if no origin (usually for local testing)
+                    frontend_url = request.host_url
             
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],

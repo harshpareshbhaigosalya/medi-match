@@ -54,7 +54,15 @@ export default function ChatBot() {
       if (token) headers.Authorization = `Bearer ${token}`;
       else if (localStorage.getItem("token")) headers.Authorization = `Bearer ${localStorage.getItem("token")}`;
 
-      let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      let baseUrl = import.meta.env.VITE_API_URL || "";
+      if (baseUrl.includes("onrender.com") && !baseUrl.includes("/api")) {
+        baseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
+      }
+      if (!baseUrl) {
+        baseUrl = window.location.origin.includes("localhost")
+          ? "http://localhost:5000/api"
+          : `${window.location.origin}/api`;
+      }
       const rootUrl = baseUrl.replace("/api", "").replace(/\/$/, "");
       const res = await fetch(`${rootUrl}/ai/chat`, {
         method: "POST",
