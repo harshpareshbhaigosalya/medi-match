@@ -8,3 +8,4 @@ psycopg2-binary
 stripe
 google-generativeai
 gunicorn
+reportlab
