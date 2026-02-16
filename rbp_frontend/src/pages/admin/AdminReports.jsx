@@ -7,15 +7,7 @@ export default function Reports() {
   const [end, setEnd] = useState("");
   const [loadingReport, setLoadingReport] = useState("");
 
-  let baseUrl = import.meta.env.VITE_API_URL || "";
-  if (baseUrl.includes("onrender.com") && !baseUrl.includes("/api")) {
-    baseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
-  }
-  if (!baseUrl) {
-    baseUrl = window.location.origin.includes("localhost")
-      ? "http://localhost:5000/api"
-      : `${window.location.origin}/api`;
-  }
+  const baseUrl = import.meta.env.VITE_API_URL || "/api";
   const base = `${baseUrl}/admin/reports`;
   const token = localStorage.getItem("token");
 

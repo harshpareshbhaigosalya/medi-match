@@ -47,15 +47,7 @@ export default function Cart() {
   function downloadQuotation() {
     if (!quote) return;
     const token = localStorage.getItem("token");
-    let apiUrl = import.meta.env.VITE_API_URL || "";
-    if (apiUrl.includes("onrender.com") && !apiUrl.includes("/api")) {
-      apiUrl = `${apiUrl.replace(/\/$/, "")}/api`;
-    }
-    if (!apiUrl) {
-      apiUrl = window.location.origin.includes("localhost")
-        ? "http://localhost:5000/api"
-        : `${window.location.origin}/api`;
-    }
+    const apiUrl = import.meta.env.VITE_API_URL || "/api";
     window.open(`${apiUrl}/cart/quotation/${quote.id}/pdf?token=${token}`, "_blank");
   }
 
