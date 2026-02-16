@@ -28,10 +28,10 @@ export default function ProductDetails() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 space-y-16">
-      
+
       {/* TOP SECTION */}
       <div className="grid lg:grid-cols-2 gap-14 items-start">
-        
+
         {/* IMAGE (STICKY) */}
         <div className="lg:sticky lg:top-24">
           <div className="bg-blue-50 rounded-3xl p-10 flex items-center justify-center">
@@ -102,11 +102,10 @@ export default function ProductDetails() {
                   <button
                     key={v.id}
                     onClick={() => setVariant(v)}
-                    className={`px-5 py-3 rounded-xl border font-medium transition ${
-                      v.id === variant?.id
+                    className={`px-5 py-3 rounded-xl border font-medium transition ${v.id === variant?.id
                         ? "border-blue-600 bg-blue-50 text-blue-700"
                         : "border-gray-300 hover:border-blue-400"
-                    }`}
+                      }`}
                   >
                     {v.variant_name}
                     <div className="text-sm font-semibold">
@@ -120,17 +119,30 @@ export default function ProductDetails() {
 
           {/* CTA */}
           <div className="flex gap-4 pt-4">
+            {/* STOCK INDICATOR */}
+            {variant && (
+              <div className={`text-sm font-bold ${variant.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                {variant.stock > 0 ? `In Stock: ${variant.stock} units` : "Out of Stock"}
+              </div>
+            )}
+
             <button
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-semibold text-lg shadow transition"
+              disabled={!variant || variant.stock <= 0}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-4 rounded-xl font-bold text-lg shadow transition"
               onClick={async () => {
-                await http.post("/cart/add", {
-                  variant_id: variant.id,
-                  quantity: 1
-                });
-                alert("Added to cart");
+                if (variant.stock < 1) return;
+                try {
+                  await http.post("/cart/add", {
+                    variant_id: variant.id,
+                    quantity: 1
+                  });
+                  alert("Added to cart");
+                } catch (e) {
+                  alert(e.response?.data?.error || "Failed to add to cart");
+                }
               }}
             >
-              Add to Cart
+              {variant?.stock > 0 ? "Add to Cart" : "Out of Stock"}
             </button>
 
             <button className="px-6 py-4 rounded-xl border border-gray-300 hover:border-blue-500 transition">
@@ -150,18 +162,18 @@ export default function ProductDetails() {
 
       {/* DETAILS SECTION (LONG CONTENT SAFE) */}
       {/* DETAILS SECTION (LONG CONTENT SAFE) */}
-<div className="bg-white rounded-3xl p-8 shadow-sm">
-  <h2 className="text-2xl font-bold mb-4">
-    Product Details
-  </h2>
+      <div className="bg-white rounded-3xl p-8 shadow-sm">
+        <h2 className="text-2xl font-bold mb-4">
+          Product Details
+        </h2>
 
-  <div
-    className="text-gray-700 leading-relaxed"
-    dangerouslySetInnerHTML={{
-      __html: variant?.description || product.description
-    }}
-  />
-</div>
+        <div
+          className="text-gray-700 leading-relaxed"
+          dangerouslySetInnerHTML={{
+            __html: variant?.description || product.description
+          }}
+        />
+      </div>
 
     </div>
   );

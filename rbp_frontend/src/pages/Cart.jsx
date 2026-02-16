@@ -170,7 +170,10 @@ export default function Cart() {
                       <div className="flex items-center bg-gray-100 rounded-xl p-1">
                         <button onClick={() => updateQty(item.id, item.quantity - 1)} disabled={item.quantity <= 1} className="p-2 hover:bg-white rounded-lg transition-colors disabled:opacity-30"><Minus size={14} /></button>
                         <span className="w-10 text-center font-black text-sm">{item.quantity}</span>
-                        <button onClick={() => updateQty(item.id, item.quantity + 1)} className="p-2 hover:bg-white rounded-lg transition-colors"><Plus size={14} /></button>
+                        <button onClick={() => updateQty(item.id, item.quantity + 1)} disabled={item.quantity >= (variant.stock || 0)} className="p-2 hover:bg-white rounded-lg transition-colors disabled:opacity-30"><Plus size={14} /></button>
+                      </div>
+                      <div className="text-[10px] uppercase font-bold text-gray-400 mt-1">
+                        Max: {variant.stock || 0}
                       </div>
                       <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 transition-colors flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest">
                         <Trash2 size={14} /> Remove
