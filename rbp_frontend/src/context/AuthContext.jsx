@@ -9,6 +9,19 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Shared URL logic to ensure syncSession uses the correct URL
+  const getBaseUrl = () => {
+    let url = import.meta.env.VITE_API_URL || "";
+    if (!url) {
+      if (window.location.host.includes("localhost") || window.location.host.includes("127.0.0.1")) {
+        url = "http://localhost:5000/api";
+      } else {
+        url = "https://medi-match-8u18.onrender.com/api";
+      }
+    }
+    return url;
+  };
+
   async function syncSession(session) {
     if (!session) {
       setUser(null);
@@ -23,11 +36,10 @@ export const AuthProvider = ({ children }) => {
     setToken(access);
     localStorage.setItem("token", access);
 
-    // Fetch and store profile data
-    const baseUrl = import.meta.env.VITE_API_URL || "/api";
+    const baseUrl = getBaseUrl();
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const res = await fetch(`${baseUrl}/profile/`, {
         headers: { Authorization: `Bearer ${access}` },
@@ -38,6 +50,8 @@ export const AuthProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
+      } else {
+        console.warn("Profile fetch returned non-ok status:", res.status);
       }
     } catch (err) {
       console.warn("Auth profile sync skipped or failed", err);
@@ -45,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    async function load() {
+    async function init() {
       try {
         const { data } = await supabase.auth.getSession();
         if (data?.session) {
@@ -58,12 +72,13 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    load();
+    init();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      syncSession(session);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // If we already finished initial loading, we can sync updates without blocking
+      await syncSession(session);
     });
 
     return () => subscription.unsubscribe();

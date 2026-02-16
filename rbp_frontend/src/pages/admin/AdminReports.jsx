@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import { apiUrl } from "../../lib/http";
 
 export default function Reports() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [loadingReport, setLoadingReport] = useState("");
 
-  const baseUrl = import.meta.env.VITE_API_URL || "/api";
-  const base = `${baseUrl}/admin/reports`;
+  const base = `${apiUrl}/admin/reports`;
   const token = localStorage.getItem("token");
 
   function download(url) {

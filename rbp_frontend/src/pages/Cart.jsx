@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { http } from "../lib/http";
+import { http, apiUrl } from "../lib/http";
 import { useNavigate } from "react-router-dom";
 import { Trash2, Plus, Minus, ArrowRight, FileText, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,7 +47,6 @@ export default function Cart() {
   function downloadQuotation() {
     if (!quote) return;
     const token = localStorage.getItem("token");
-    const apiUrl = import.meta.env.VITE_API_URL || "/api";
     window.open(`${apiUrl}/cart/quotation/${quote.id}/pdf?token=${token}`, "_blank");
   }
 

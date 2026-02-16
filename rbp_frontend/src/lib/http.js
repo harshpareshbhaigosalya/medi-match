@@ -1,12 +1,25 @@
 import axios from "axios";
 
-// The API URL should ideally be in VITE_API_URL. 
-// If missing, we use "/api" as a relative path.
-const apiUrl = import.meta.env.VITE_API_URL || "/api";
+// Determination of API URL:
+// 1. Check VITE_API_URL environment variable
+// 2. If missing and on localhost, use local backend (port 5000)
+// 3. If missing and on Render (production), use the verified backend URL
+let apiUrl = import.meta.env.VITE_API_URL || "";
+
+if (!apiUrl) {
+  if (window.location.host.includes("localhost") || window.location.host.includes("127.0.0.1")) {
+    apiUrl = "http://localhost:5000/api";
+  } else {
+    // Production Fallback: Use the verified backend URL for this project
+    apiUrl = "https://medi-match-8u18.onrender.com/api";
+  }
+}
+
+export { apiUrl };
 
 export const http = axios.create({
   baseURL: apiUrl,
-  timeout: 10000, // 10s default timeout to prevent hanging UI
+  timeout: 15000, // 15s timeout
 });
 
 http.interceptors.request.use((config) => {
