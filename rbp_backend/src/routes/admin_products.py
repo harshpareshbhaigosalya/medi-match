@@ -57,6 +57,54 @@ def list_products():
     return jsonify(res.data)
 
 
+# STOCK REPORT
+@admin_products_bp.get("/stock-report")
+@require_admin
+def stock_report():
+    # 1. Categories
+    cats = supabase.table("product_categories").select("id, name").execute().data or []
+    cat_map = {c["id"]: c["name"] for c in cats}
+
+    # 2. Products
+    prods = supabase.table("products").select("id, name, category_id").execute().data or []
+
+    # 3. Variants
+    variants = supabase.table("product_variants").select("id, product_id, variant_name, stock, price").execute().data or []
+
+    # 4. Sales Count (Grouped by variant_id)
+    order_items = supabase.table("order_items").select("variant_id, quantity").execute().data or []
+    sold_map = {}
+    for item in order_items:
+        vid = item.get("variant_id")
+        qty = item.get("quantity") or 0
+        sold_map[vid] = sold_map.get(vid, 0) + qty
+
+    # 5. Assemble Hierarchy
+    prod_obj_map = {}
+    for p in prods:
+        pid = p["id"]
+        p["variants"] = []
+        p["category_name"] = cat_map.get(p.get("category_id"), "Uncategorized")
+        prod_obj_map[pid] = p
+
+    # Attach variants
+    for v in variants:
+        pid = v.get("product_id")
+        if pid in prod_obj_map:
+            v["sold"] = sold_map.get(v["id"], 0)
+            prod_obj_map[pid]["variants"].append(v)
+    
+    # Group products by category
+    grouped = {}
+    for p in prods:
+        cname = p["category_name"]
+        if cname not in grouped:
+            grouped[cname] = []
+        grouped[cname].append(p)
+    
+    return jsonify(grouped)
+
+
 # CREATE
 @admin_products_bp.post("/")
 
