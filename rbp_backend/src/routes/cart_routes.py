@@ -522,7 +522,9 @@ def checkout_direct():
                 })
 
             print(f"DEBUG: line_items: {line_items}")
-            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+            # Fallback to production URL if env var missing
+            frontend_url = os.getenv("FRONTEND_URL", "https://medi-match-8u18.onrender.com")
+            frontend_url = frontend_url.rstrip("/")
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=line_items,

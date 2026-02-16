@@ -43,9 +43,13 @@ export default function Login() {
         throw new Error(errorText || "Profile sync failed");
       }
 
-      const profile = await res.json();
-      if (profile.role === "admin") navigate("/admin");
-      else navigate("/");
+      console.log("Logged in profile:", profile);
+      // Wait for AuthContext to potentially update, but we are manually navigating.
+      if (profile.role === "admin") {
+        window.location.href = "/admin"; // Force reload to ensure clean state for admin
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       console.error("Login failed:", err);
       setError(err.message || "Invalid credentials or Server Error");

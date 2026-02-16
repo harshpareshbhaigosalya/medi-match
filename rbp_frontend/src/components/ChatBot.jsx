@@ -61,7 +61,7 @@ export default function ChatBot() {
       // Let's assume it's /ai or /api/ai.
       // Safest is to use the same logic as before but with apiUrl.
       const rootUrl = baseUrl.replace("/api", "").replace(/\/$/, "");
-      const res = await fetch(`${rootUrl} /ai/chat`, {
+      const res = await fetch(`${rootUrl}/ai/chat`, {
         method: "POST",
         headers,
         body: JSON.stringify({ message: userMsg.content, user_id: user?.id }),
