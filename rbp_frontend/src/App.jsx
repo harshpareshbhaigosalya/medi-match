@@ -27,6 +27,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import Reports from "./pages/admin/AdminReports";
 import AdminAISuggestions from "./pages/admin/AdminAISuggestions";
 import AdminUserInsights from "./pages/admin/AdminUserInsights";
+import AdminStock from "./pages/admin/AdminStock";
 import Onboarding from "./components/Onboarding";
 import Loader from "./components/Loader";
 
@@ -103,6 +104,7 @@ export default function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="ai-suggestions" element={<AdminAISuggestions />} />
             <Route path="user-insights" element={<AdminUserInsights />} />
+            <Route path="stock" element={<AdminStock />} />
           </Route>
         </Routes>
       </div>
