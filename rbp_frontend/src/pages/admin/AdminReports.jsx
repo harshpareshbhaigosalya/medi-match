@@ -248,6 +248,11 @@ export default function Reports() {
 
         {stockLoading ? (
           <div className="py-20 text-center animate-pulse text-gray-400 font-medium">Loading Inventory Data...</div>
+        ) : Object.keys(filteredStock).length === 0 ? (
+          <div className="py-20 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-3xl">
+            <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            No stock data found. Try refreshing or check product inventory.
+          </div>
         ) : (
           <div className="space-y-6">
             {Object.entries(filteredStock).map(([cat, products]) => (
