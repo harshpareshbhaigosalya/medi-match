@@ -107,6 +107,10 @@ function HomeWatcher() {
         setProfile(res.data);
       } catch (err) {
         console.log("HOME WATCHER PROFILE ERROR", err);
+        // If error is 401, clear token
+        if (err.response && err.response.status === 401) {
+          localStorage.removeItem("token");
+        }
       } finally {
         setLoading(false);
       }

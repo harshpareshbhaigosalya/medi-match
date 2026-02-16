@@ -25,7 +25,7 @@ export { apiUrl };
 
 export const http = axios.create({
   baseURL: apiUrl,
-  timeout: 15000,
+  timeout: 30000,
 });
 
 http.interceptors.request.use((config) => {
