@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary: #2563eb;
+    --primary-light: #eff6ff;
+    --glass: rgba(255, 255, 255, 0.7);
+  }
+
+  *::selection {
+    background: var(--primary);
+    color: white;
+  }
+
+  body {
+    @apply antialiased text-gray-900 bg-gray-50;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-heading {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  /* Premium Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-blue-600/20 rounded-full hover:bg-blue-600/40 transition-colors;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,11 @@
+# Master gitignore
+node_modules/
+__pycache__/
+.env
+.env.local
+dist/
+build/
+venv/
+.idea/
+.vscode/
+*.log
