@@ -46,7 +46,8 @@ export default function Login() {
       const profile = await res.json();
       console.log("Logged in profile:", profile);
 
-      if (profile.role === "admin") {
+      // Hotfix: Force admin navigation if using the admin email, even if DB role is wrong
+      if (profile.role === "admin" || email.toLowerCase() === "admin@gmail.com") {
         navigate("/admin");
       } else {
         navigate("/");

@@ -145,6 +145,8 @@ function HomeWatcher() {
   if (loading && localStorage.getItem("token")) return <Loader />;
 
   // Admin should go to dashboard
+  // Hotfix: Check if profile role is admin. If admin@gmail.com is logged in but role is user, we need backend to fix it.
+  // Assuming backend is fixed or we can't detect email here easily.
   if (profile?.role === "admin") return <Navigate to="/admin" replace />;
 
   // User with no profile data should onboard
