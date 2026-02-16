@@ -24,7 +24,9 @@ export default function ProtectedRoute({ children, requiredRole }) {
     }
     // If profile is missing but we need admin, we must wait or deny.
     // For safety, if we need admin and profile is missing, we redirect unless we are still loading.
-    if (!profile) return <Navigate to="/" replace />;
+    // If profile is missing but we need admin, we must wait.
+    // We show loader to prevent premature redirect if profile is still syncing.
+    if (!profile) return <Loader />;
   }
 
   // If they are on a 'user' route and they are an 'admin', redirect them to admin dashboard
