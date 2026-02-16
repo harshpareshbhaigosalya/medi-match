@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, Send, X, Sparkles, Mic, Maximize2, Minimize2, Layout, ArrowRight } from "lucide-react";
-import { http, apiUrl } from "../lib/http";
+import { http } from "../lib/http";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -54,10 +54,9 @@ export default function ChatBot() {
       if (token) headers.Authorization = `Bearer ${token}`;
       else if (localStorage.getItem("token")) headers.Authorization = `Bearer ${localStorage.getItem("token")}`;
 
-      // Construct AI endpoint (sibling to /api)
-      const aiUrl = apiUrl.replace(/\/api\/?$/, "") + "/ai/chat";
-
-      const res = await fetch(aiUrl, {
+      let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const rootUrl = baseUrl.replace("/api", "").replace(/\/$/, "");
+      const res = await fetch(`${rootUrl}/ai/chat`, {
         method: "POST",
         headers,
         body: JSON.stringify({ message: userMsg.content, user_id: user?.id }),

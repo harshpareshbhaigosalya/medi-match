@@ -27,25 +27,19 @@ export default function Login() {
       const token = data.session.access_token;
       localStorage.setItem("token", token);
 
-      const apiUrl = import.meta.env.VITE_API_URL || "/api";
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-      try {
-        const res = await fetch(`${apiUrl}/profile/`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        const profile = await res.json();
-        if (profile?.role === "admin") navigate("/admin");
-        else navigate("/");
-      } catch (fetchErr) {
-        console.warn("Profile fetch failed, fallback to home", fetchErr);
-        navigate("/");
+      let apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      if (apiUrl.includes("onrender.com") && !apiUrl.includes("/api")) {
+        apiUrl = `${apiUrl.replace(/\/$/, "")}/api`;
       }
+
+      // fetch profile to ensure it exists and check role
+      const res = await fetch(`${apiUrl}/profile/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const profile = await res.json();
+      if (profile.role === "admin") navigate("/admin");
+      else navigate("/");
     } catch (err) {
       console.error("Login failed:", err);
       setError(err.message || "Invalid credentials");
@@ -55,7 +49,7 @@ export default function Login() {
 
   async function loginWithGoogle() {
     setLoading(true);
-    const redirectUrl = import.meta.env.VITE_FRONTEND_URL || (window.location.origin + "/");
+    const redirectUrl = window.location.origin + "/";
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: redirectUrl },

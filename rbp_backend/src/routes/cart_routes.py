@@ -522,23 +522,13 @@ def checkout_direct():
                 })
 
             print(f"DEBUG: line_items: {line_items}")
-            # Determine frontend URL: Try Env Var, then Request Origin fallback
-            frontend_url = os.getenv("FRONTEND_URL")
-            if not frontend_url:
-                # Fallback to current request origin or localhost
-                origin = request.headers.get("Origin")
-                if origin:
-                    frontend_url = origin
-                else:
-                    # Fallback to current host if no origin (usually for local testing)
-                    frontend_url = request.host_url
-            
+            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=line_items,
                 mode='payment',
-                success_url=f"{frontend_url.rstrip('/')}/orders/{order_id}?status=success",
-                cancel_url=f"{frontend_url.rstrip('/')}/checkout?status=cancel",
+                success_url=f"{frontend_url}/orders/{order_id}?status=success",
+                cancel_url=f"{frontend_url}/checkout?status=cancel",
                 client_reference_id=str(order_id),
                 metadata={
                     "order_id": str(order_id)
