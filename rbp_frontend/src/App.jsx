@@ -1,7 +1,6 @@
 // src/App.jsx
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import axios from "axios";
 
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -35,7 +34,6 @@ export default function App() {
   const [appLoading, setAppLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial loading
     const timer = setTimeout(() => setAppLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
@@ -47,31 +45,29 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* USER AREA */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <PublicLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/" element={<Dashboard />} />
+      {/* PUBLIC & USER AREA */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<HomeWatcher />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetails />} />
-        <Route path="/cart" element={<Cart />} />
         <Route path="/contactus" element={<ContactUs />} />
-        <Route path="/addresses" element={<Addresses />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/orders/:id" element={<OrderDetails />} />
-        <Route path="/profile" element={<Profile />} />
+
+        {/* AUTH PROTECTED USER ROUTES */}
+        <Route element={<ProtectedRoute requiredRole="user" />}>
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/addresses" element={<Addresses />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<OrderDetails />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
       </Route>
 
       {/* ADMIN AREA */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             <MainLayout />
           </ProtectedRoute>
         }
@@ -90,8 +86,10 @@ export default function App() {
   );
 }
 
-// Dashboard component
-function Dashboard() {
+/**
+ * Watcher for the Home page to handle role-based redirects and onboarding
+ */
+function HomeWatcher() {
   const [profile, setProfile] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const navigate = useNavigate();
@@ -106,30 +104,28 @@ function Dashboard() {
         }
 
         const res = await http.get("/profile/");
-
         setProfile(res.data);
       } catch (err) {
-        console.log("PROFILE ERROR", err);
+        console.log("HOME WATCHER PROFILE ERROR", err);
       } finally {
         setLoading(false);
       }
     }
-
     load();
   }, []);
 
-  if (loading) return <Loader />;
+  if (loading && localStorage.getItem("token")) return <Loader />;
 
-  if (!profile) return <Navigate to="/login" replace />;
+  // Admin should go to dashboard
+  if (profile?.role === "admin") return <Navigate to="/admin" replace />;
 
-  if (profile.role === "admin") return <Navigate to="/admin" replace />;
-
-  if (!profile.full_name) {
+  // User with no profile data should onboard
+  if (profile && !profile.full_name) {
     return (
       <Onboarding
         profile={profile}
         onComplete={() => {
-          navigate("/");
+          window.location.reload(); // Refresh to clear onboarding state
         }}
       />
     );

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { http } from "../../lib/http";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
@@ -8,7 +7,11 @@ export default function Reports() {
   const [end, setEnd] = useState("");
   const [loadingReport, setLoadingReport] = useState("");
 
-  const base = "http://localhost:5000/api/admin/reports";
+  let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  if (baseUrl.includes("onrender.com") && !baseUrl.includes("/api")) {
+    baseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
+  }
+  const base = `${baseUrl}/admin/reports`;
   const token = localStorage.getItem("token");
 
   function download(url) {
@@ -37,7 +40,7 @@ export default function Reports() {
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold text-blue-800 mb-6"
+        className="text-3xl font-bold text-blue-800 mb-6 font-heading"
       >
         📊 Reports Dashboard
       </motion.h1>
@@ -47,21 +50,21 @@ export default function Reports() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white border rounded-2xl shadow-md p-6 space-y-4"
+        className="bg-white border-2 border-gray-100 rounded-3xl shadow-xl shadow-gray-100 p-8 space-y-6"
       >
-        <h2 className="text-xl font-semibold text-blue-700">Sales Report</h2>
-        <p className="text-gray-600">Select a date range to generate sales report</p>
+        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Sales Analytics</h2>
+        <p className="text-gray-500 font-medium">Select a date range to generate a comprehensive sales report PDF.</p>
 
-        <div className="flex flex-col md:flex-row gap-3 items-center">
+        <div className="flex flex-col md:flex-row gap-4 items-center pt-2">
           <input
             type="date"
-            className="border p-2 rounded w-full md:w-auto"
+            className="border-2 border-gray-100 p-3 rounded-xl w-full md:w-auto focus:ring-2 focus:ring-blue-400 outline-none transition-all"
             value={start}
             onChange={(e) => setStart(e.target.value)}
           />
           <input
             type="date"
-            className="border p-2 rounded w-full md:w-auto"
+            className="border-2 border-gray-100 p-3 rounded-xl w-full md:w-auto focus:ring-2 focus:ring-blue-400 outline-none transition-all"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
           />
@@ -69,17 +72,10 @@ export default function Reports() {
           <button
             onClick={downloadSales}
             disabled={loadingReport === "sales"}
-            className={`bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold flex items-center gap-2 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold uppercase text-xs tracking-widest flex items-center gap-3 transition-all hover:scale-105 shadow-lg shadow-blue-100 disabled:opacity-50"
           >
-            {loadingReport === "sales" && (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1 }}
-              >
-                <Loader2 size={20} />
-              </motion.div>
-            )}
-            {loadingReport === "sales" ? "Generating..." : "Download"}
+            {loadingReport === "sales" && <Loader2 size={18} className="animate-spin" />}
+            {loadingReport === "sales" ? "Generating..." : "Download Report"}
           </button>
         </div>
       </motion.div>
@@ -89,32 +85,31 @@ export default function Reports() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white border rounded-2xl shadow-md p-6 space-y-4"
+        className="bg-white border-2 border-gray-100 rounded-3xl shadow-xl shadow-gray-100 p-8 space-y-6"
       >
-        <h2 className="text-xl font-semibold text-blue-700 mb-2">Other Reports</h2>
-        <p className="text-gray-600">Click to download any report</p>
+        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Inventory & Logistics</h2>
+        <p className="text-gray-500 font-medium tracking-tight">Quick access to product performance and customer metrics.</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { name: "Product Performance", url: `${base}/products`, key: "products" },
-            { name: "Customers", url: `${base}/customers`, key: "customers" },
-            { name: "Orders (Detailed)", url: `${base}/orders`, key: "orders" },
+            { name: "Customers List", url: `${base}/customers`, key: "customers" },
+            { name: "Order Logs", url: `${base}/orders`, key: "orders" },
           ].map((report) => (
             <button
               key={report.key}
               onClick={() => handleDownload(report.url, report.key)}
               disabled={loadingReport === report.key}
-              className={`border p-3 rounded-xl text-center font-medium transition transform hover:scale-105 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+              className="border-2 border-gray-100 p-6 rounded-2xl text-center font-bold text-gray-700 transition-all hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 flex flex-col items-center justify-center gap-3 group disabled:opacity-50"
             >
-              {loadingReport === report.key && (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1 }}
-                >
-                  <Loader2 size={18} />
-                </motion.div>
-              )}
-              {loadingReport === report.key ? "Generating..." : report.name}
+              <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                {loadingReport === report.key ? (
+                  <Loader2 size={24} className="animate-spin text-blue-600" />
+                ) : (
+                  <span className="text-2xl">📋</span>
+                )}
+              </div>
+              <span className="text-sm tracking-tight uppercase">{report.name}</span>
             </button>
           ))}
         </div>

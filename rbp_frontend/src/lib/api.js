@@ -1,7 +1,10 @@
 import axios from "axios";
 import { supabase } from "./supabase";
 
-const API_BASE = "http://localhost:5000/api";
+let apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+if (apiUrl.includes("onrender.com") && !apiUrl.includes("/api")) {
+  apiUrl = `${apiUrl.replace(/\/$/, "")}/api`;
+}
 
 export async function api() {
   const {
@@ -9,7 +12,7 @@ export async function api() {
   } = await supabase.auth.getSession();
 
   return axios.create({
-    baseURL: API_BASE,
+    baseURL: apiUrl,
     headers: {
       Authorization: `Bearer ${session?.access_token}`,
     },
