@@ -5,40 +5,42 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   async function syncSession(session) {
     if (!session) {
       setUser(null);
+      setProfile(null);
       setToken(null);
       localStorage.removeItem("token");
       return;
     }
 
     const access = session.access_token;
-
     setUser(session.user);
     setToken(access);
-
-    // store token so navbar + APIs work
     localStorage.setItem("token", access);
 
-    // make sure backend profile exists
+    // Fetch and store profile data
     const baseUrl = import.meta.env.VITE_API_URL || "/api";
-
-    // Don't block if we can't sync profile immediately
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-      await fetch(`${baseUrl}/profile/`, {
+      const res = await fetch(`${baseUrl}/profile/`, {
         headers: { Authorization: `Bearer ${access}` },
         signal: controller.signal
       });
       clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+      }
     } catch (err) {
-      console.warn("Profile sync skipped or failed (backend may be offline or URL misconfigured)", err);
+      console.warn("Auth profile sync skipped or failed", err);
     }
   }
 
@@ -58,7 +60,6 @@ export const AuthProvider = ({ children }) => {
 
     load();
 
-    // listen for google/email login changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -69,7 +70,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading }}>
+    <AuthContext.Provider value={{ user, profile, token, loading, setProfile }}>
       {children}
     </AuthContext.Provider>
   );

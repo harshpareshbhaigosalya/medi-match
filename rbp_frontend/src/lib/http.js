@@ -6,6 +6,7 @@ const apiUrl = import.meta.env.VITE_API_URL || "/api";
 
 export const http = axios.create({
   baseURL: apiUrl,
+  timeout: 10000, // 10s default timeout to prevent hanging UI
 });
 
 http.interceptors.request.use((config) => {

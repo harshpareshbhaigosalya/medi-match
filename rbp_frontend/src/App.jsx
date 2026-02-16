@@ -30,15 +30,12 @@ import AdminUserInsights from "./pages/admin/AdminUserInsights";
 import Onboarding from "./components/Onboarding";
 import Loader from "./components/Loader";
 
+import { useAuth } from "./context/AuthContext";
+
 export default function App() {
-  const [appLoading, setAppLoading] = useState(true);
+  const { loading: authLoading } = useAuth();
 
-  useEffect(() => {
-    const timer = setTimeout(() => setAppLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (appLoading) return <Loader />;
+  if (authLoading) return <Loader />;
 
   return (
     <Routes>
@@ -89,32 +86,15 @@ export default function App() {
 /**
  * Watcher for the Home page to handle role-based redirects and onboarding
  */
+/**
+ * Watcher for the Home page to handle role-based redirects and onboarding
+ */
 function HomeWatcher() {
-  const [profile, setProfile] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const navigate = useNavigate();
+  const { profile, loading, user } = useAuth();
 
-  React.useEffect(() => {
-    async function load() {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const res = await http.get("/profile/");
-        setProfile(res.data);
-      } catch (err) {
-        console.log("HOME WATCHER PROFILE ERROR", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  if (loading && localStorage.getItem("token")) return <Loader />;
+  // If we have a user but no profile yet, and we are still loading, wait.
+  // But if loading is finished and we still have no profile, just show Home.
+  if (loading && user) return <Loader />;
 
   // Admin should go to dashboard
   if (profile?.role === "admin") return <Navigate to="/admin" replace />;
@@ -125,7 +105,7 @@ function HomeWatcher() {
       <Onboarding
         profile={profile}
         onComplete={() => {
-          window.location.reload(); // Refresh to clear onboarding state
+          window.location.reload();
         }}
       />
     );
