@@ -24,7 +24,6 @@ export default function MainLayout() {
     { to: "/admin/ai-suggestions", label: "AI Suggestions", icon: <FileText className="w-5 h-5" /> },
     { to: "/admin/categories", label: "Categories", icon: <Layers className="w-5 h-5" /> },
     { to: "/admin/products", label: "Products", icon: <Box className="w-5 h-5" /> },
-    { to: "/admin/stock", label: "Stock Report", icon: <Box className="w-5 h-5 text-yellow-400" /> },
     { to: "/admin/orders", label: "Orders", icon: <ShoppingCart className="w-5 h-5" /> },
     { to: "/admin/users", label: "Users", icon: <Users className="w-5 h-5" /> },
     { to: "/admin/reports", label: "Reports", icon: <FileText className="w-5 h-5" /> },
