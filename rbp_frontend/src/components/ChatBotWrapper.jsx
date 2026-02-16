@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import ChatBot from "c:/Users/harsh/OneDrive/Desktop/rb panchal final/rbp_frontend/src/components/Chatbot";
+import ChatBot from "./ChatBot";
 
 export default function ChatBotWrapper() {
   const { user, loading } = useAuth();
