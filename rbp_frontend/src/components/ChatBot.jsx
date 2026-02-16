@@ -222,9 +222,9 @@ export default function ChatBot() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className={`fixed z-[9999] shadow-2xl overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col ${fullScreen
+            className={`fixed z-[99999] shadow-2xl overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col ${fullScreen
               ? "inset-0 m-0 w-screen h-screen rounded-none"
-              : "bottom-10 right-10 w-[420px] h-[650px] rounded-[32px] border border-white/20 shadow-blue-200/50"
+              : "bottom-6 right-6 w-[400px] h-[600px] max-h-[85vh] rounded-[32px] border border-white/20 shadow-blue-200/50"
               }`}
             style={{
               background: "linear-gradient(135deg, #f8faff 0%, #ffffff 100%)",

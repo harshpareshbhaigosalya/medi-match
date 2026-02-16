@@ -45,9 +45,9 @@ export default function Login() {
 
       const profile = await res.json();
       console.log("Logged in profile:", profile);
-      // Wait for AuthContext to potentially update, but we are manually navigating.
+
       if (profile.role === "admin") {
-        window.location.href = "/admin"; // Force reload to ensure clean state for admin
+        navigate("/admin");
       } else {
         navigate("/");
       }
