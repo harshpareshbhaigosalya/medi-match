@@ -529,8 +529,8 @@ def checkout_direct():
                 payment_method_types=['card'],
                 line_items=line_items,
                 mode='payment',
-                success_url=f"{frontend_url}/orders/{order_id}",
-                cancel_url=f"{frontend_url}/checkout",
+                success_url=f"{frontend_url}/#/orders/{order_id}",
+                cancel_url=f"{frontend_url}/#/checkout",
                 client_reference_id=str(order_id),
                 metadata={
                     "order_id": str(order_id)
