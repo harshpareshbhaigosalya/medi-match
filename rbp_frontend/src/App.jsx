@@ -32,57 +32,81 @@ import Loader from "./components/Loader";
 
 export default function App() {
   const [appLoading, setAppLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setAppLoading(false), 1500);
-    return () => clearTimeout(timer);
+    const checkApi = async () => {
+      try {
+        // Quick check to see if API is reachable
+        const res = await http.get("/products?limit=1");
+        if (typeof res.data === 'string' && res.data.includes("<!DOCTYPE")) {
+          throw new Error("API not found (returned HTML)");
+        }
+      } catch (e) {
+        console.error("API Connectivity Error", e);
+        setApiError(true);
+      } finally {
+        setAppLoading(false);
+      }
+    };
+    checkApi();
   }, []);
 
   if (appLoading) return <Loader />;
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <>
+      {apiError && (
+        <div className="bg-red-600 text-white text-center p-2 font-bold text-sm fixed top-0 left-0 right-0 z-50 shadow-md">
+          ⚠️ Backend API not connected. VITE_API_URL is missing or incorrect.
+          <span className="opacity-80 font-normal ml-2 hidden sm:inline">Set it in Render Dashboard.</span>
+        </div>
+      )}
+      <div className={apiError ? "mt-10" : ""}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-      {/* PUBLIC & USER AREA */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<HomeWatcher />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/products/:id" element={<ProductDetails />} />
-        <Route path="/contactus" element={<ContactUs />} />
+          {/* PUBLIC & USER AREA */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomeWatcher />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetails />} />
+            <Route path="/contactus" element={<ContactUs />} />
 
-        {/* AUTH PROTECTED USER ROUTES */}
-        <Route element={<ProtectedRoute requiredRole="user" />}>
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/addresses" element={<Addresses />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/orders/:id" element={<OrderDetails />} />
-          <Route path="/profile" element={<Profile />} />
-        </Route>
-      </Route>
+            {/* AUTH PROTECTED USER ROUTES */}
+            <Route element={<ProtectedRoute requiredRole="user" />}>
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/addresses" element={<Addresses />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/:id" element={<OrderDetails />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
+          </Route>
 
-      {/* ADMIN AREA */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="categories" element={<AdminCategories />} />
-        <Route path="products" element={<AdminProducts />} />
-        <Route path="variants" element={<AdminVariants />} />
-        <Route path="orders" element={<AdminOrders />} />
-        <Route path="users" element={<AdminUsers />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="ai-suggestions" element={<AdminAISuggestions />} />
-        <Route path="user-insights" element={<AdminUserInsights />} />
-      </Route>
-    </Routes>
+          {/* ADMIN AREA */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="variants" element={<AdminVariants />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="ai-suggestions" element={<AdminAISuggestions />} />
+            <Route path="user-insights" element={<AdminUserInsights />} />
+          </Route>
+        </Routes>
+      </div>
+    </>
   );
 }
 

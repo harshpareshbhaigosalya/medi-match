@@ -33,13 +33,24 @@ export default function Login() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      if (!res.ok) {
+        // If 404/500, check content type
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+          throw new Error("Backend connection failed (HTML Error). Check VITE_API_URL.");
+        }
+        const errorText = await res.text();
+        throw new Error(errorText || "Profile sync failed");
+      }
+
       const profile = await res.json();
       if (profile.role === "admin") navigate("/admin");
       else navigate("/");
     } catch (err) {
       console.error("Login failed:", err);
-      setError(err.message || "Invalid credentials");
+      setError(err.message || "Invalid credentials or Server Error");
       setLoading(false);
+      localStorage.removeItem("token"); // Clear bad token
     }
   };
 

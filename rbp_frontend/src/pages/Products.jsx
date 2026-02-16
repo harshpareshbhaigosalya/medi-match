@@ -25,8 +25,18 @@ export default function Products() {
   }
 
   async function loadProducts(cat = "") {
-    const res = await http.get(cat ? `/products?category=${cat}` : "/products");
-    setProducts(res.data);
+    try {
+      const res = await http.get(cat ? `/products?category=${cat}` : "/products");
+      // Check if response is HTML (HTML response means 404/fallback page => API is down/wrong URL)
+      if (typeof res.data === 'string' && res.data.startsWith("<!DOCTYPE")) {
+        throw new Error("Invalid API Response");
+      }
+      setProducts(res.data);
+    } catch (err) {
+      console.error("Failed to load products", err);
+      // In production, if API fails, don't show empty. Show error or mock.
+      setProducts([]);
+    }
   }
 
   useEffect(() => {
