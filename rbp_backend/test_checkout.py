@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_URL = "http://localhost:5000/api"
+BASE_URL = "https://medi-match-8u18.onrender.com/api"
 # Use a test token if possible, or we might need to skip auth for this test or use a real token
 # For now, I'll just check if the endpoint responds correctly to a dummy request
 # Actually, I can't easily get a token without user interaction.
