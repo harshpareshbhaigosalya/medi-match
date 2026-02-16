@@ -71,6 +71,8 @@ def run_agent(user_id: str, message: str):
             system_prompt = (
                 "You are Medi-Match AI, the intelligent procurement brain of RB Panchal Medical Supplies. "
                 "Intents: SHOW_PRODUCTS, SEARCH_PRODUCT, ADD_TO_CART, SUGGEST_HOSPITAL_EQUIPMENT, COMPARE, BUNDLE, CLEAR_CART, SHOW_ORDERS, CHAT. "
+                "Task: Extract intent and parameters. "
+                "For ADD_TO_CART: Split quantity from product name (e.g., '5 beds' -> product_name='bed', quantity=5). "
                 "For COMPARE: product_names = [A, B]. For BUNDLE: department = 'ICU'. "
                 "Return ONLY JSON: {\"intent\": \"...\", \"product_names\": [], \"department\": \"...\", \"product_name\": \"...\", \"quantity\": 1, \"hospital_type\": \"...\"}"
             )
@@ -101,7 +103,7 @@ def run_agent(user_id: str, message: str):
             actions.append({
                 "type": "COMPARE",
                 "data": {
-                    "products": [{"name": p["name"], "price": p.get("base_price"), "id": p["id"]} for p in products],
+                    "products": [{"name": p["name"], "price": p.get("base_price"), "id": p["id"], "description": p.get("description")} for p in products],
                     "features": ["description"]
                 }
             })
@@ -157,10 +159,24 @@ def run_agent(user_id: str, message: str):
 
     elif intent == "ADD_TO_CART":
         term = product_name
+        
+        # Fallback regex if LLM missed it
         if not term:
             m = re.search(r"add (.+?) to", msg)
             if m: term = m.group(1)
         
+        # Manually parse quantity if present in term (e.g. "5 beds")
+        if term:
+            # Check for leading number "5 beds" or "5 x beds"
+            qty_match = re.search(r"^(\d+)\s*(?:x\s*|\*|times\s*)?(.+)", term)
+            if qty_match:
+                quantity = int(qty_match.group(1))
+                term = qty_match.group(2).strip()
+            
+            # Remove plural 's' at end if mostly likely plural (simple check)
+            if term.endswith("s") and not term.endswith("ss"):
+                 term = term[:-1]
+
         matched = None
         if term:
             candidates = tools.search_products_by_name(term)
@@ -174,7 +190,7 @@ def run_agent(user_id: str, message: str):
             else:
                 response = f"I found '{matched['name']}', but it's currently on back-order."
         else:
-            response = "Which specific product would you like to add? (e.g., 'Add a Fowler Bed')"
+            response = f"I tried adding '{term or 'item'}' but couldn't identify the specific product. Try 'Add Hospital Bed'."
 
     elif intent == "SUGGEST_HOSPITAL_EQUIPMENT":
         ctx = hospital_type or msg
