@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../lib/http";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -26,11 +27,6 @@ export default function Login() {
 
       const token = data.session.access_token;
       localStorage.setItem("token", token);
-
-      let apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-      if (apiUrl.includes("onrender.com") && !apiUrl.includes("/api")) {
-        apiUrl = `${apiUrl.replace(/\/$/, "")}/api`;
-      }
 
       // fetch profile to ensure it exists and check role
       const res = await fetch(`${apiUrl}/profile/`, {

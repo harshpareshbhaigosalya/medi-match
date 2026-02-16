@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { http } from "../lib/http";
+import { http, apiUrl } from "../lib/http";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,12 +32,8 @@ export default function OrderDetails() {
 
   function downloadInvoice() {
     const token = localStorage.getItem("token");
-    let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    if (baseUrl.includes("onrender.com") && !baseUrl.includes("/api")) {
-      baseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
-    }
     window.open(
-      `${baseUrl}/cart/order/${order.id}/invoice?token=${token}`,
+      `${apiUrl}/cart/order/${order.id}/invoice?token=${token}`,
       "_blank"
     );
   }

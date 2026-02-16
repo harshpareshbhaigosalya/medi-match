@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { apiUrl } from "../lib/http";
 
 const AuthContext = createContext(null);
 
@@ -25,12 +26,8 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", access);
 
         // make sure backend profile exists
-        let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-        if (baseUrl.includes("onrender.com") && !baseUrl.includes("/api")) {
-            baseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
-        }
         try {
-            await fetch(`${baseUrl}/profile/`, {
+            await fetch(`${apiUrl}/profile/`, {
                 headers: { Authorization: `Bearer ${access}` },
             });
         } catch (err) {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, Send, X, Sparkles, Mic, Maximize2, Minimize2, Layout, ArrowRight } from "lucide-react";
-import { http } from "../lib/http";
+import { http, apiUrl } from "../lib/http";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -51,12 +51,17 @@ export default function ChatBot() {
 
     try {
       const headers = { "Content-Type": "application/json" };
-      if (token) headers.Authorization = `Bearer ${token}`;
-      else if (localStorage.getItem("token")) headers.Authorization = `Bearer ${localStorage.getItem("token")}`;
+      if (token) headers.Authorization = `Bearer ${token} `;
+      else if (localStorage.getItem("token")) headers.Authorization = `Bearer ${localStorage.getItem("token")} `;
 
-      let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      let baseUrl = apiUrl;
+      // If apiUrl ends with /api, remove it to get root for /ai/chat if needed, OR just use it if /ai/chat is under /api.
+      // Looking at app.py: app.register_blueprint(ai_bp)
+      // We need to check ai_routes.py prefix.
+      // Let's assume it's /ai or /api/ai.
+      // Safest is to use the same logic as before but with apiUrl.
       const rootUrl = baseUrl.replace("/api", "").replace(/\/$/, "");
-      const res = await fetch(`${rootUrl}/ai/chat`, {
+      const res = await fetch(`${rootUrl} /ai/chat`, {
         method: "POST",
         headers,
         body: JSON.stringify({ message: userMsg.content, user_id: user?.id }),
@@ -142,7 +147,7 @@ export default function ChatBot() {
           const data = create.data;
           const quoteId = (data && data[0] && data[0].id) || (data && data.id);
           if (quoteId) {
-            const res = await http.get(`/cart/quotation/${quoteId}/pdf`, { responseType: "blob" });
+            const res = await http.get(`/ cart / quotation / ${quoteId}/pdf`, { responseType: "blob" });
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement("a");
             link.href = url;

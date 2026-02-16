@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import { apiUrl } from "../../lib/http";
 
 export default function Reports() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [loadingReport, setLoadingReport] = useState("");
 
-  let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  /* let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
   if (baseUrl.includes("onrender.com") && !baseUrl.includes("/api")) {
     baseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
-  }
-  const base = `${baseUrl}/admin/reports`;
+  } */
+  const base = `${apiUrl}/admin/reports`;
   const token = localStorage.getItem("token");
 
   function download(url) {
