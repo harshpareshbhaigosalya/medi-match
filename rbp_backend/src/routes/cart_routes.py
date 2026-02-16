@@ -522,12 +522,13 @@ def checkout_direct():
                 })
 
             print(f"DEBUG: line_items: {line_items}")
+            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=line_items,
                 mode='payment',
-                success_url=f"http://localhost:5173/orders/{order_id}?status=success",
-                cancel_url=f"http://localhost:5173/checkout?status=cancel",
+                success_url=f"{frontend_url}/orders/{order_id}?status=success",
+                cancel_url=f"{frontend_url}/checkout?status=cancel",
                 client_reference_id=str(order_id),
                 metadata={
                     "order_id": str(order_id)

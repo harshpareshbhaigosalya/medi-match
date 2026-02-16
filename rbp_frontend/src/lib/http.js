@@ -1,7 +1,12 @@
 import axios from "axios";
 
+let apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+if (apiUrl.includes("onrender.com") && !apiUrl.includes("/api")) {
+  apiUrl = `${apiUrl.replace(/\/$/, "")}/api`;
+}
+
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: apiUrl,
 });
 
 http.interceptors.request.use((config) => {

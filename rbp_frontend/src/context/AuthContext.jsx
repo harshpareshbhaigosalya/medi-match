@@ -25,7 +25,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", access);
 
     // make sure backend profile exists
-    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    if (baseUrl.includes("onrender.com") && !baseUrl.includes("/api")) {
+      baseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
+    }
     try {
       await fetch(`${baseUrl}/profile/`, {
         headers: { Authorization: `Bearer ${access}` },

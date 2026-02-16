@@ -35,14 +35,13 @@ def create_app():
     # 🔥 prevent redirect /api/products → /api/products/
     app.url_map.strict_slashes = False
 
-    # 🔥 CORS MUST APPLY BEFORE redirects
+    # 🔥 Allow production and local origins
     CORS(
         app,
         resources={r"/*": {"origins": "*"}},
-        supports_credentials=True,
-        origins=["http://localhost:5173"],
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type"]
+        allow_headers=["Authorization", "Content-Type", "Accept"],
+        expose_headers=["Authorization"]
     )
 
     app.register_blueprint(auth_bp)

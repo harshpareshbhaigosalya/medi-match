@@ -32,7 +32,10 @@ export default function OrderDetails() {
 
   function downloadInvoice() {
     const token = localStorage.getItem("token");
-    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    if (baseUrl.includes("onrender.com") && !baseUrl.includes("/api")) {
+      baseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
+    }
     window.open(
       `${baseUrl}/cart/order/${order.id}/invoice?token=${token}`,
       "_blank"
