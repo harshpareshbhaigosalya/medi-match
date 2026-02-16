@@ -49,7 +49,7 @@ export default function Login() {
 
   async function loginWithGoogle() {
     setLoading(true);
-    const redirectUrl = window.location.origin + "/";
+    const redirectUrl = import.meta.env.VITE_FRONTEND_URL || (window.location.origin + "/");
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: redirectUrl },
