@@ -32,8 +32,9 @@ export default function OrderDetails() {
 
   function downloadInvoice() {
     const token = localStorage.getItem("token");
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
     window.open(
-      `http://localhost:5000/api/cart/order/${order.id}/invoice?token=${token}`,
+      `${baseUrl}/cart/order/${order.id}/invoice?token=${token}`,
       "_blank"
     );
   }

@@ -54,7 +54,8 @@ export default function ChatBot() {
       if (token) headers.Authorization = `Bearer ${token}`;
       else if (localStorage.getItem("token")) headers.Authorization = `Bearer ${localStorage.getItem("token")}`;
 
-      const res = await fetch("http://localhost:5000/ai/chat", {
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const res = await fetch(`${baseUrl.replace("/api", "")}/ai/chat`, {
         method: "POST",
         headers,
         body: JSON.stringify({ message: userMsg.content, user_id: user?.id }),
