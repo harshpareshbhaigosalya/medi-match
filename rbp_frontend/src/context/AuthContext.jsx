@@ -8,28 +8,30 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState(null);
 
     async function syncSession(session) {
         if (!session) {
             setUser(null);
             setToken(null);
+            setProfile(null);
             localStorage.removeItem("token");
             return;
         }
 
         const access = session.access_token;
-
         setUser(session.user);
         setToken(access);
-
-        // store token so navbar + APIs work
         localStorage.setItem("token", access);
 
-        // make sure backend profile exists
         try {
-            await fetch(`${apiUrl}/profile/`, {
+            const res = await fetch(`${apiUrl}/profile/`, {
                 headers: { Authorization: `Bearer ${access}` },
             });
+            if (res.ok) {
+                const data = await res.json();
+                setProfile(data);
+            }
         } catch (err) {
             console.log("PROFILE SYNC FAILED", err);
         }
@@ -37,6 +39,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         async function load() {
+            setLoading(true);
             const { data } = await supabase.auth.getSession();
             await syncSession(data.session);
             setLoading(false);
@@ -44,10 +47,7 @@ export const AuthProvider = ({ children }) => {
 
         load();
 
-        // listen for google/email login changes
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             syncSession(session);
         });
 
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, token, loading }}>
+        <AuthContext.Provider value={{ user, token, profile, loading }}>
             {children}
         </AuthContext.Provider>
     );
