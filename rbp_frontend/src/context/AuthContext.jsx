@@ -26,20 +26,34 @@ export const AuthProvider = ({ children }) => {
 
     // make sure backend profile exists
     const baseUrl = import.meta.env.VITE_API_URL || "/api";
+
+    // Don't block if we can't sync profile immediately
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
       await fetch(`${baseUrl}/profile/`, {
         headers: { Authorization: `Bearer ${access}` },
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
     } catch (err) {
-      console.log("PROFILE SYNC FAILED", err);
+      console.warn("Profile sync skipped or failed (backend may be offline or URL misconfigured)", err);
     }
   }
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.auth.getSession();
-      await syncSession(data.session);
-      setLoading(false);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) {
+          await syncSession(data.session);
+        }
+      } catch (err) {
+        console.error("AUTH BOOT ERROR", err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     load();

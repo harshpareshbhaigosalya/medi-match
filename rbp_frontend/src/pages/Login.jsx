@@ -29,14 +29,23 @@ export default function Login() {
 
       const apiUrl = import.meta.env.VITE_API_URL || "/api";
 
-      // fetch profile to ensure it exists and check role
-      const res = await fetch(`${apiUrl}/profile/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-      const profile = await res.json();
-      if (profile.role === "admin") navigate("/admin");
-      else navigate("/");
+      try {
+        const res = await fetch(`${apiUrl}/profile/`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        const profile = await res.json();
+        if (profile?.role === "admin") navigate("/admin");
+        else navigate("/");
+      } catch (fetchErr) {
+        console.warn("Profile fetch failed, fallback to home", fetchErr);
+        navigate("/");
+      }
     } catch (err) {
       console.error("Login failed:", err);
       setError(err.message || "Invalid credentials");
