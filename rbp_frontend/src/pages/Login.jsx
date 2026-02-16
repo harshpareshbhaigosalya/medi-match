@@ -43,6 +43,7 @@ export default function Login() {
         throw new Error(errorText || "Profile sync failed");
       }
 
+      const profile = await res.json();
       console.log("Logged in profile:", profile);
       // Wait for AuthContext to potentially update, but we are manually navigating.
       if (profile.role === "admin") {
