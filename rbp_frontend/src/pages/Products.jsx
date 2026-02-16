@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { http } from "../lib/http";
 import { Link } from "react-router-dom";
-import { Search, SlidersHorizontal, ChevronRight, Star } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronRight, Star, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 const badgeTypes = [
