@@ -14,8 +14,8 @@ export default function Cart() {
   const navigate = useNavigate();
   const { user } = useAuth(); // Ensure we have user context if needed
 
-  async function load() {
-    setLoading(true);
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
     setError("");
     try {
       const res = await http.get("/cart/");
@@ -41,7 +41,7 @@ export default function Cart() {
         setError("Could not stream cart data. Backend might be waking up.");
       }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -49,7 +49,7 @@ export default function Cart() {
     if (qty < 1) return;
     try {
       await http.put("/cart/update", { item_id: itemId, quantity: qty });
-      load(); // Reload to get fresh calculations
+      load(true); // Reload to get fresh calculations silently
     } catch (e) {
       alert("Failed to update quantity");
     }
@@ -58,7 +58,7 @@ export default function Cart() {
   async function removeItem(itemId) {
     try {
       await http.delete(`/cart/remove/${itemId}`);
-      load();
+      load(true);
     } catch (e) {
       alert("Failed to remove item");
     }

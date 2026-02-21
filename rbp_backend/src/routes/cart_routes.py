@@ -45,6 +45,7 @@ def get_cart():
             product_variants (
                 id,
                 variant_name,
+                stock,
                 price,
                 description,
                 product_id,
